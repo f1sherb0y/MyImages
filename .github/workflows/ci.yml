@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Fetch MyGo and apply the patch
+        shell: pwsh
+        run: .\tools\setup-mygo.ps1
+      - name: Cache NSIS
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\mygo\nsis-*
+          key: nsis-${{ hashFiles('go.sum') }}
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test ./...
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $env:CGO_ENABLED = '0'
+          go tool mygo build .
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Get-ChildItem build\windows-amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: myimages-windows-amd64
+          path: |
+            build/windows-amd64/myimages-setup-*.exe
+            build/windows-amd64/MyImages.exe
+          if-no-files-found: error

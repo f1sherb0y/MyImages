@@ -1,0 +1,144 @@
+diff --git a/internal/gpu/d3d11/shared.go b/internal/gpu/d3d11/shared.go
+index e8080b1..e385259 100644
+--- a/internal/gpu/d3d11/shared.go
++++ b/internal/gpu/d3d11/shared.go
+@@ -279,3 +279,41 @@ func (r *Renderer) dropDevice() {
+ 	r.dev, r.classes = nil, nil
+ 	releaseDevice(d)
+ }
++
++// prewarmed is the device Prewarm made, kept so that the renderers made
++// later share it, and prewarming closes once it is made, or could not be.
++var (
++	prewarmed  *sharedDevice
++	prewarming chan struct{}
++)
++
++// Prewarm makes the device renderers share on another thread, which
++// loads the GPU's driver: some 100 ms or more that the first window's
++// first frame would otherwise wait for on the main thread. Call it once,
++// before any window is made.
++func Prewarm() {
++	prewarming = make(chan struct{})
++	go func() {
++		defer close(prewarming)
++		if d, err := acquireDevice(); err == nil {
++			devices.Lock()
++			prewarmed = d
++			devices.Unlock()
++		}
++	}()
++}
++
++// Prewarming returns a channel that closes once the device Prewarm
++// makes is there, and nil when it is, or Prewarm was not called: a
++// window's first frame draws in memory rather than wait for it.
++func Prewarming() <-chan struct{} {
++	if prewarming == nil {
++		return nil
++	}
++	select {
++	case <-prewarming:
++		return nil
++	default:
++		return prewarming
++	}
++}
+diff --git a/ui/prewarm_other.go b/ui/prewarm_other.go
+new file mode 100644
+index 0000000..bebd584
+--- /dev/null
++++ b/ui/prewarm_other.go
+@@ -0,0 +1,9 @@
++//go:build !windows
++
++package ui
++
++// Prewarm starts making what the first window's first frame needs of
++// the GPU, on Windows; elsewhere it does nothing.
++func Prewarm() {}
++
++func gpuPending() <-chan struct{} { return nil }
+diff --git a/ui/prewarm_windows.go b/ui/prewarm_windows.go
+new file mode 100644
+index 0000000..3ae234f
+--- /dev/null
++++ b/ui/prewarm_windows.go
+@@ -0,0 +1,21 @@
++package ui
++
++import (
++	"os"
++
++	"github.com/egoist/mygo/internal/gpu/d3d11"
++)
++
++// Prewarm starts making what the first window's first frame needs of
++// the GPU, on another thread: call it as the program starts, before the
++// app runs, and the frame finds it made, or waits only for the rest.
++func Prewarm() {
++	if os.Getenv("MYGO_GPU") == "0" {
++		return
++	}
++	d3d11.Prewarm()
++}
++
++// gpuPending returns a channel that closes once the GPU that Prewarm
++// readies can draw, and nil when it can already.
++func gpuPending() <-chan struct{} { return d3d11.Prewarming() }
+diff --git a/ui/window.go b/ui/window.go
+index 699b9e6..8dc6fa8 100644
+--- a/ui/window.go
++++ b/ui/window.go
+@@ -126,6 +126,8 @@ type windowHost struct {
+ 	// retryAt is when a frame makes another, and backoff how long the next
+ 	// failure waits.
+ 	gpuTried bool
++	// gpuAwaited is set once the window waits for the GPU Prewarm readies.
++	gpuAwaited bool
+ 	onGPU    bool
+ 	degraded bool
+ 	gpuSince time.Time
+@@ -473,6 +475,9 @@ func (h *windowHost) present(s *scene.Scene) {
+ 	}
+ 	due := !h.retryAt.IsZero() && !time.Now().Before(h.retryAt)
+ 	switch {
++	case !h.gpuTried && h.awaitGPU():
++		// The GPU is still being readied (Prewarm): this frame draws in
++		// memory, so that the window shows without waiting for it.
+ 	case !h.gpuTried || h.gpu == nil && due:
+ 		h.makeGPU()
+ 	case due && h.degraded:
+@@ -660,11 +665,31 @@ func (h *windowHost) makeGPU() {
+ 	}
+ }
+ 
++// awaitGPU reports whether the GPU that Prewarm readies on another thread
++// is not there yet, and has the window draw again once it is: until then
++// its frames draw in memory.
++func (h *windowHost) awaitGPU() bool {
++	pending := gpuPending()
++	if pending == nil {
++		return false
++	}
++	if !h.gpuAwaited {
++		h.gpuAwaited = true
++		go func() {
++			<-pending
++			if h.conn.Invalidate != nil {
++				h.invalidate()
++			}
++		}()
++	}
++	return true
++}
++
+ // accelerated reports whether the frame draws on a GPU (Painter.Accelerated).
+ // The first frame makes its GPU renderer as it paints rather than as it
+ // presents, to tell.
+ func (h *windowHost) accelerated() bool {
+-	if h.framing && !h.gpuTried {
++	if h.framing && !h.gpuTried && !h.awaitGPU() {
+ 		h.makeGPU()
+ 	}
+ 	h.told, h.asked = h.gpu != nil && !software(h.gpu), true

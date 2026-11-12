@@ -1,0 +1,272 @@
+{
+  "name": "MyImages",
+  "identifier": "dev.myimages.viewer",
+  "version": "0.1.0",
+  "copyright": "© 2026 f1sherb0y",
+  "license": "MIT",
+  "out": "build",
+  "i18n": {
+    "dir": "locales",
+    "source": "en"
+  },
+  "fileAssociations": [
+    {
+      "ext": [
+        "jpg",
+        "jpeg",
+        "jpe",
+        "jfif",
+        "jif"
+      ],
+      "name": "JPEG Image",
+      "mimeType": "image/jpeg",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "png",
+        "apng"
+      ],
+      "name": "PNG Image",
+      "mimeType": "image/png",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "gif"
+      ],
+      "name": "GIF Image",
+      "mimeType": "image/gif",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "bmp",
+        "dib"
+      ],
+      "name": "Bitmap Image",
+      "mimeType": "image/bmp",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "tif",
+        "tiff"
+      ],
+      "name": "TIFF Image",
+      "mimeType": "image/tiff",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "webp"
+      ],
+      "name": "WebP Image",
+      "mimeType": "image/webp",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "heic",
+        "heif",
+        "hif"
+      ],
+      "name": "HEIF Image",
+      "mimeType": "image/heif",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "avif"
+      ],
+      "name": "AVIF Image",
+      "mimeType": "image/avif",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "jxl"
+      ],
+      "name": "JPEG XL Image",
+      "mimeType": "image/jxl",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "jp2",
+        "j2k",
+        "jpf",
+        "jpx"
+      ],
+      "name": "JPEG 2000 Image",
+      "mimeType": "image/jp2",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "jxr",
+        "hdp",
+        "wdp"
+      ],
+      "name": "JPEG XR Image",
+      "mimeType": "image/vnd.ms-photo",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "ico",
+        "cur"
+      ],
+      "name": "Icon",
+      "mimeType": "image/vnd.microsoft.icon",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "svg",
+        "svgz"
+      ],
+      "name": "SVG Image",
+      "mimeType": "image/svg+xml",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "psd",
+        "psb"
+      ],
+      "name": "Photoshop Image",
+      "mimeType": "image/vnd.adobe.photoshop",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "tga"
+      ],
+      "name": "Targa Image",
+      "mimeType": "image/x-tga",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "dds"
+      ],
+      "name": "DirectDraw Surface",
+      "mimeType": "image/vnd-ms.dds",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "qoi"
+      ],
+      "name": "QOI Image",
+      "mimeType": "image/qoi",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "pbm",
+        "pgm",
+        "ppm",
+        "pnm",
+        "pam",
+        "pfm"
+      ],
+      "name": "Netpbm Image",
+      "mimeType": "image/x-portable-anymap",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "hdr",
+        "exr"
+      ],
+      "name": "HDR Image",
+      "mimeType": "image/vnd.radiance",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "pcx"
+      ],
+      "name": "PCX Image",
+      "mimeType": "image/x-pcx",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "xbm",
+        "xpm"
+      ],
+      "name": "X11 Image",
+      "mimeType": "image/x-xpixmap",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "fits"
+      ],
+      "name": "FITS Image",
+      "mimeType": "image/fits",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "emf",
+        "wmf"
+      ],
+      "name": "Metafile",
+      "mimeType": "image/emf",
+      "role": "Viewer"
+    },
+    {
+      "ext": [
+        "3fr",
+        "ari",
+        "arw",
+        "bay",
+        "cap",
+        "cr2",
+        "cr3",
+        "crw",
+        "dcr",
+        "dcs",
+        "dng",
+        "drf",
+        "eip",
+        "erf",
+        "fff",
+        "gpr",
+        "iiq",
+        "k25",
+        "kdc",
+        "mdc",
+        "mef",
+        "mos",
+        "mrw",
+        "nef",
+        "nrw",
+        "orf",
+        "pef",
+        "ptx",
+        "pxn",
+        "raf",
+        "raw",
+        "rw2",
+        "rwl",
+        "rwz",
+        "sr2",
+        "srf",
+        "srw",
+        "x3f"
+      ],
+      "name": "Camera Raw Image",
+      "mimeType": "image/x-raw",
+      "role": "Viewer"
+    }
+  ],
+  "updates": {
+    "publicKey": "sbbHSoIBwbH7++mJJeYr27icZM2LJpWmAypwLOxDN8A=",
+    "github": "f1sherb0y/MyImages"
+  }
+}

@@ -1,0 +1,73 @@
+name: Release
+
+# Pushing a tag like v0.2.0 builds the installer at that version and
+# publishes it on the release page, with the signed update that copies
+# already installed look for as they start.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Fetch MyGo and apply the patch
+        shell: pwsh
+        run: .\tools\setup-mygo.ps1
+      - name: Cache NSIS
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\mygo\nsis-*
+          key: nsis-${{ hashFiles('go.sum') }}
+      - name: Take the version from the tag
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          if ($version -notmatch '^\d+\.\d+\.\d+') { throw "the tag ${{ github.ref_name }} is no version" }
+          $utf8 = New-Object System.Text.UTF8Encoding $false
+          $path = Join-Path $PWD 'mygo.json'
+          $text = [IO.File]::ReadAllText($path, $utf8)
+          $find = '"version":\s*"[^"]*"'
+          if ($text -notmatch $find) { throw 'no version to set in mygo.json' }
+          [IO.File]::WriteAllText($path, ($text -replace $find, "`"version`": `"$version`""), $utf8)
+          "VERSION=$version" >> $env:GITHUB_ENV
+      - name: Test
+        run: go test ./...
+      - name: Build the installer and the update
+        shell: pwsh
+        env:
+          # The key that signs updates: installed copies take only what it
+          # signed. Without it the build makes no update, and the copies
+          # installed never learn of this version.
+          MYGO_UPDATER_PRIVATE_KEY: ${{ secrets.MYGO_UPDATER_PRIVATE_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if (-not $env:MYGO_UPDATER_PRIVATE_KEY) { throw 'the secret MYGO_UPDATER_PRIVATE_KEY is not set' }
+          $env:CGO_ENABLED = '0'
+          go tool mygo build .
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Copy-Item build\windows-amd64\MyImages.exe "build\windows-amd64\MyImages-$env:VERSION-portable-amd64.exe"
+          Get-ChildItem build\windows-amd64
+      - name: Publish the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $dir = 'build\windows-amd64'
+          $files = @(
+            "$dir\myimages-setup-$env:VERSION-amd64.exe",
+            "$dir\MyImages-$env:VERSION-portable-amd64.exe",
+            # What installed copies update from: the manifest they read
+            # from the latest release, and the archive and deltas it names.
+            "$dir\update-windows-amd64.json",
+            "$dir\myimages-$env:VERSION-windows-amd64.tar.gz",
+            "$dir\install.ps1")
+          $files += @(Get-ChildItem "$dir\*.delta" | ForEach-Object FullName)
+          gh release create '${{ github.ref_name }}' @files --title "MyImages $env:VERSION" --generate-notes
