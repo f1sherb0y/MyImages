@@ -225,7 +225,11 @@ func main() {
 				press(hwnd, vkRight)
 				for time.Since(at) < 5*time.Second {
 					if sum(g.grab(hwnd, size)) != before {
-						steps = append(steps, time.Since(at))
+						d := time.Since(at)
+						steps = append(steps, d)
+						if d > 150*time.Millisecond {
+							fmt.Printf("  slow step: run %d key %d took %.0f ms\n", run+1, k+1, float64(d.Microseconds())/1000)
+						}
 						break
 					}
 					time.Sleep(500 * time.Microsecond)
