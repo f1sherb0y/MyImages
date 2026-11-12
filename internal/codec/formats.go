@@ -34,7 +34,7 @@ var rawList = strings.Fields(`
 // installed knows them: ImageMagick, or a handler of the system's.
 var rareList = strings.Fields(`
 	xbm xpm fits fit fts viff xv wpg cut fax g3 flif sgi ras sun pict pct
-	xcf dcm dpx cin miff mng jng pcd palm otb wbmp art
+	xcf dcm dpx cin miff mng jng pcd palm otb wbmp art mjpeg obm
 `)
 
 var rawExts = func() map[string]bool {

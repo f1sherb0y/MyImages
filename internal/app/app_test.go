@@ -6,6 +6,7 @@ import (
 	"image/gif"
 	"math"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -266,5 +267,44 @@ func TestDrawingFillsTheWindow(t *testing.T) {
 	}
 	if edge > 6 {
 		t.Errorf("the drawing's edges are %d pixels of blur", edge)
+	}
+}
+
+// An animated WebP plays, where ImageMagick is there to make one and the
+// system has a codec for it.
+func TestAnimatedWebPPlays(t *testing.T) {
+	magick, err := exec.LookPath("magick")
+	if err != nil {
+		t.Skip("no ImageMagick to make the file with")
+	}
+	h := newHarness(t)
+	path := filepath.Join(h.dir, "moving.webp")
+	args := []string{"-size", "120x90", "xc:rgb(220,30,30)", "xc:rgb(30,200,60)", "xc:rgb(40,60,230)", "-set", "delay", "10", "-loop", "0", "-define", "webp:lossless=true", path}
+	if out, err := exec.Command(magick, args...).CombinedOutput(); err != nil {
+		t.Skipf("magick: %v: %s", err, out)
+	}
+	h.w.openPath(path)
+	h.settle()
+	p := h.w.current()
+	if p == nil || p.err != nil {
+		t.Skipf("no codec for WebP here: %+v", p)
+	}
+	if p.anim == nil {
+		t.Fatalf("the file is not taken for an animation: %d frames", p.frames)
+	}
+	seen := map[color.RGBA]bool{}
+	for i := 0; i < 300 && len(seen) < 3; i++ {
+		h.tt.Advance(60 * time.Millisecond)
+		h.tt.Frame()
+		time.Sleep(5 * time.Millisecond)
+		c := h.at(midX, midY)
+		for _, want := range []color.RGBA{red, green, blue} {
+			if near(c, want) {
+				seen[want] = true
+			}
+		}
+	}
+	if len(seen) < 3 {
+		t.Errorf("the animation showed %d of its 3 frames", len(seen))
 	}
 }
