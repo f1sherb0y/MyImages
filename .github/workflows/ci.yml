@@ -25,7 +25,9 @@ jobs:
           path: ~\AppData\Local\mygo\nsis-*
           key: nsis-${{ hashFiles('go.sum') }}
       - name: Vet
-        run: go vet ./...
+        # The system hands back memory of its own as numbers: the conversions
+        # vet doubts are those.
+        run: go vet -unsafeptr=false ./...
       - name: Test
         run: go test ./...
       - name: Build the installer

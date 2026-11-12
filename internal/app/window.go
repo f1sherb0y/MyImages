@@ -252,6 +252,7 @@ func (w *Window) openPath(path string) {
 				old.file = files[w.cur]
 				w.photos[old.path] = old
 			}
+			w.thumbs.follow = true
 			w.preload()
 			w.retitle()
 		})

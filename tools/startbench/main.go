@@ -47,24 +47,37 @@ var (
 	procDeleteObject       = gdi32.NewProc("DeleteObject")
 )
 
-// findWindow returns a visible top-level window whose title contains
-// text, 0 for none.
-func findWindow(text string) uintptr {
-	var found uintptr
-	cb := syscall.NewCallback(func(hwnd, _ uintptr) uintptr {
+// Callbacks are made once: the system has room for a couple of thousand
+// in a process, for good.
+var (
+	wantTitle   string
+	foundWindow uintptr
+	childList   []uintptr
+
+	findCallback = syscall.NewCallback(func(hwnd, _ uintptr) uintptr {
 		if v, _, _ := procIsWindowVisible.Call(hwnd); v == 0 {
 			return 1
 		}
 		var buf [512]uint16
 		n, _, _ := procGetWindowTextW.Call(hwnd, uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
-		if n > 0 && strings.Contains(syscall.UTF16ToString(buf[:n]), text) {
-			found = hwnd
+		if n > 0 && strings.Contains(syscall.UTF16ToString(buf[:n]), wantTitle) {
+			foundWindow = hwnd
 			return 0
 		}
 		return 1
 	})
-	procEnumWindows.Call(cb, 0)
-	return found
+	childCallback = syscall.NewCallback(func(child, _ uintptr) uintptr {
+		childList = append(childList, child)
+		return 1
+	})
+)
+
+// findWindow returns a visible top-level window whose title contains
+// text, 0 for none.
+func findWindow(text string) uintptr {
+	wantTitle, foundWindow = text, 0
+	procEnumWindows.Call(findCallback, 0)
+	return foundWindow
 }
 
 // grabber copies what a window shows into memory, as the window
@@ -147,13 +160,10 @@ func sum(pix []uint32) uint64 {
 // keyboard would send it: nothing goes to any other window.
 func press(hwnd uintptr, vk uintptr) {
 	const keyDown, keyUp = 0x100, 0x101
-	targets := []uintptr{hwnd}
 	// The keyboard's window may be one inside it.
-	cb := syscall.NewCallback(func(child, _ uintptr) uintptr {
-		targets = append(targets, child)
-		return 1
-	})
-	procEnumChildWindows.Call(hwnd, cb, 0)
+	childList = childList[:0]
+	procEnumChildWindows.Call(hwnd, childCallback, 0)
+	targets := append([]uintptr{hwnd}, childList...)
 	for _, t := range targets {
 		procPostMessageW.Call(t, keyDown, vk, 1|0x014D0000)
 		procPostMessageW.Call(t, keyUp, vk, 1|0xC14D0000)
