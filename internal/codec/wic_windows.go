@@ -167,7 +167,7 @@ func wicDecode(f, dec *object, opt Options) (*Picture, error) {
 	}
 	p := &Picture{FullW: int(w), FullH: int(h), Frames: int(frames), Frame: index, Format: wicContainers[container], Via: "wic"}
 	p.Orient = wicOrientation(frame)
-	if frames > 1 && (p.Format == "WebP" || p.Format == "GIF") {
+	if frames > 1 && p.Format == "GIF" {
 		p.Animated = true
 		p.Delay = wicDelay(frame)
 	}

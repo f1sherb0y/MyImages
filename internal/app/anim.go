@@ -170,7 +170,7 @@ func openAnimation(path string) (ui.VideoDecoder, error) {
 	if err != nil {
 		return nil, err
 	}
-	var head [8]byte
+	var head [12]byte
 	_, _ = io.ReadFull(f, head[:])
 	f.Close()
 	switch {
@@ -186,8 +186,39 @@ func openAnimation(path string) (ui.VideoDecoder, error) {
 			return nil, err
 		}
 		return ui.NewAPNGDecoder(data)
+	case string(head[:4]) == "RIFF" && string(head[8:12]) == "WEBP":
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		frames, delays, err := codec.WebPFrames(data)
+		if err != nil {
+			return nil, err
+		}
+		return &frameList{frames: frames, delays: delays}, nil
 	}
 	return &frameSequence{path: path}, nil
+}
+
+// frameList plays frames decoded already.
+type frameList struct {
+	frames []image.Image
+	delays []time.Duration
+	next   int
+}
+
+func (l *frameList) Next() (ui.VideoFrame, error) {
+	if l.next >= len(l.frames) {
+		return ui.VideoFrame{}, io.EOF
+	}
+	i := l.next
+	l.next++
+	return ui.VideoFrame{Image: l.frames[i], Duration: l.delays[i]}, nil
+}
+
+func (l *frameList) Rewind() error {
+	l.next = 0
+	return nil
 }
 
 // frameSequence plays a file's frames as the codecs decode them, one at

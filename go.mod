@@ -8,6 +8,7 @@ require (
 	github.com/ftrvxmtrx/tga v0.0.0-20150524081124-bd8e8d5be13a
 	github.com/gen2brain/avif v0.6.0
 	github.com/gen2brain/jpegxl v0.6.0
+	github.com/gen2brain/webp v0.6.4
 	github.com/mdouchement/hdr v0.2.4
 	github.com/mokiat/goexr v0.1.0
 	github.com/oov/psd v0.0.0-20260818185439-a5d50ec0acac

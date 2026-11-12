@@ -270,8 +270,8 @@ func TestDrawingFillsTheWindow(t *testing.T) {
 	}
 }
 
-// An animated WebP plays, where ImageMagick is there to make one and the
-// system has a codec for it.
+// An animated WebP plays, where ImageMagick is there to make one,
+// whether or not the system has a codec for the format.
 func TestAnimatedWebPPlays(t *testing.T) {
 	magick, err := exec.LookPath("magick")
 	if err != nil {
@@ -287,7 +287,7 @@ func TestAnimatedWebPPlays(t *testing.T) {
 	h.settle()
 	p := h.w.current()
 	if p == nil || p.err != nil {
-		t.Skipf("no codec for WebP here: %+v", p)
+		t.Fatalf("the WebP did not decode: %+v", p)
 	}
 	if p.anim == nil {
 		t.Fatalf("the file is not taken for an animation: %d frames", p.frames)

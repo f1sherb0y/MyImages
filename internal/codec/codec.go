@@ -80,15 +80,15 @@ var ErrUnknown = errors.New("unknown image format")
 // Decode reads the picture a file holds.
 func Decode(path string, opt Options) (*Picture, error) {
 	p, err := decode(path, opt)
-	if err == nil && p.Format == "PNG" && !p.Animated && animatedPNG(path) {
+	if err == nil && !p.Animated && (p.Format == "PNG" || p.Format == "WebP") && animated(path) {
 		p.Animated = true
 	}
 	return p, err
 }
 
-// animatedPNG tells whether a PNG file holds an animation: whether it
-// says so before its picture, as those that do must.
-func animatedPNG(path string) bool {
+// animated tells whether a PNG or WebP file holds an animation: a PNG
+// says so before its picture, a WebP in its header.
+func animated(path string) bool {
 	f, err := os.Open(path)
 	if err != nil {
 		return false
@@ -97,6 +97,9 @@ func animatedPNG(path string) bool {
 	head := make([]byte, 4096)
 	n, _ := io.ReadFull(f, head)
 	head = head[:n]
+	if animatedWebP(head) {
+		return true
+	}
 	at := bytes.Index(head, []byte("acTL"))
 	return at > 0 && (bytes.Index(head, []byte("IDAT")) < 0 || at < bytes.Index(head, []byte("IDAT")))
 }

@@ -51,7 +51,7 @@ tools/               startbench（秒表）、decbench（解码器计时）
 
 - 空闲时不画帧（MyGo 只在有变化时画），CPU 为零。
 - 解码告一段落 2 秒后把用过的内存还给系统。
-- 一个 19 MB 的 exe，没有运行时、没有附带的 DLL。
+- 一个 21 MB 的 exe，没有运行时、没有附带的 DLL。
 
 ## 格式
 
@@ -60,7 +60,7 @@ tools/               startbench（秒表）、decbench（解码器计时）
 | 谁解码 | 格式 |
 |---|---|
 | **系统的解码器（WIC）** | JPEG、PNG、BMP、TIFF、ICO/CUR、DDS、JPEG XR（jxr、hdp、wdp）；WebP、HEIC/HEIF、AVIF、JPEG XL 和相机 RAW（装了系统对应的扩展时；Windows 11 自带其中大部分） |
-| **Go 的解码库** | GIF（标准库）、AVIF（gen2brain/avif）、JPEG XL（gen2brain/jpegxl）、JPEG 2000（ajroetker/go-jpeg2000）、PSD/PSB（oov/psd）、TGA（ftrvxmtrx/tga）、QOI（xfmoulet/qoi）、PCX（samuel/go-pcx）、PBM/PGM/PPM/PNM/PAM（spakin/netpbm）、Radiance HDR 和 PFM（mdouchement/hdr，带色调映射）、OpenEXR（mokiat/goexr）、SVG/SVGZ（MyGo 自己的 SVG 渲染）；以及系统没有解码器时的 PNG、JPEG、BMP、TIFF、WebP（标准库和 golang.org/x/image） |
+| **Go 的解码库** | GIF（标准库）、AVIF（gen2brain/avif）、JPEG XL（gen2brain/jpegxl）、JPEG 2000（ajroetker/go-jpeg2000）、PSD/PSB（oov/psd）、TGA（ftrvxmtrx/tga）、QOI（xfmoulet/qoi）、PCX（samuel/go-pcx）、PBM/PGM/PPM/PNM/PAM（spakin/netpbm）、Radiance HDR 和 PFM（mdouchement/hdr，带色调映射）、OpenEXR（mokiat/goexr）、SVG/SVGZ（MyGo 自己的 SVG 渲染）；以及系统没有解码器时的 PNG、JPEG、BMP、TIFF（标准库和 golang.org/x/image）和 WebP（gen2brain/webp） |
 | **系统的绘图接口** | EMF、WMF（GDI 回放） |
 | **RAW 的内嵌预览** | 系统的 RAW 解码器不认识的相机文件：找出文件里最大的那张内嵌 JPEG 来显示，状态栏注明「内嵌预览」 |
 | **ImageMagick**（如果装了） | 上面都不认识的：XBM、XPM、FITS、VIFF、WPG、PIZ 压缩的 EXR、部分 PSD 等。`magick` 在 PATH 里才有这一档 |
@@ -72,7 +72,7 @@ AVIF 和 JPEG XL 优先用系统的（更快），没装扩展时用 Go 的库�
 
 每种格式谁更快是量过的（[benchmark.md](benchmark.md#解码器)）：JPEG、PNG、WebP、LZW 的 TIFF 都是 WIC 更快，所以走 WIC。
 
-**动图**：GIF、APNG 用 MyGo 的解码器逐帧合成；动态 WebP 的各帧由 WIC 给。解码在另一个线程上，提前两帧，五块缓冲轮流用。
+**动图**：GIF、APNG 用 MyGo 的解码器逐帧合成；动态 WebP 用 gen2brain/webp（不依赖系统装没装 WebP 扩展）。解码在另一个线程上，提前两帧，五块缓冲轮流用。
 
 **方向**：EXIF 方向在解码后转正（不重新编码文件）。旋转、翻转只改显示，不改文件。
 

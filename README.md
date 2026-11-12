@@ -8,7 +8,7 @@
   <a href="https://github.com/f1sherb0y/MyImages/releases/latest">下载安装包</a>
 </p>
 
-一个快、紧凑的 Windows 看图软件。界面用 [MyGo](https://github.com/egoist/mygo) 的原生 UI 在 GPU 上画，纯 Go，没有 cgo，单个 19 MB 的 exe，安装包 7 MB。
+一个快、紧凑的 Windows 看图软件。界面用 [MyGo](https://github.com/egoist/mygo) 的原生 UI 在 GPU 上画，纯 Go，没有 cgo，单个 21 MB 的 exe，安装包 8 MB。
 
 ![窗口：工具栏、图片、信息面板、缩略图](docs/images/window.png)
 
