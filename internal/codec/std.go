@@ -8,9 +8,10 @@ import (
 	"image/png"
 	"io"
 
-	"github.com/gen2brain/webp"
+	gwebp "github.com/gen2brain/webp"
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
+	"golang.org/x/image/webp"
 )
 
 // The formats Go's own packages decode. GIFs are theirs: their frames
@@ -22,7 +23,7 @@ func init() {
 	register(std("JPEG", jpeg.Decode), hasPrefix("\xff\xd8\xff"))
 	register(std("BMP", bmp.Decode), hasPrefix("BM"))
 	register(std("TIFF", tiff.Decode), func(h []byte) bool { return hasPrefix("II*\x00")(h) || hasPrefix("MM\x00*")(h) })
-	register(std("WebP", func(r io.Reader) (image.Image, error) { return webp.Decode(r) }), func(h []byte) bool {
+	register(std("WebP", decodeWebP), func(h []byte) bool {
 		return len(h) >= 12 && string(h[:4]) == "RIFF" && string(h[8:12]) == "WEBP"
 	})
 }
@@ -37,4 +38,18 @@ func decodeGIF(data []byte, opt Options) (*Picture, error) {
 	// Whether it moves is found by playing it; most do.
 	p.Animated = true
 	return p, nil
+}
+
+// decodeWebP decodes a WebP picture with Go's own decoder, which gives
+// its colors exactly, and the first frame of an animation, which that
+// decoder does not read, with the library that plays it.
+func decodeWebP(r io.Reader) (image.Image, error) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	if img, err := webp.Decode(bytes.NewReader(data)); err == nil {
+		return img, nil
+	}
+	return gwebp.Decode(bytes.NewReader(data))
 }

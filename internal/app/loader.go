@@ -55,7 +55,7 @@ type photo struct {
 	loading, loadingFull bool
 	// larger asks for the preview again, of the size the area has now.
 	larger bool
-	gen                  int
+	gen    int
 	// results holds what decodes finished, until the main thread takes
 	// them.
 	results chan *decoded
