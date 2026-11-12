@@ -84,3 +84,9 @@ func DefaultFor(ext string) string {
 // IsDefaultFor reports whether the program is the default for an
 // extension.
 func IsDefaultFor(ext string) bool { return strings.EqualFold(DefaultFor(ext), progID(ext)) }
+
+// A program cannot make itself the default. The system keeps the user's
+// choice for an extension signed, and where a program removes it to have
+// the extension's own kind count, as programs once did, Windows 11 puts
+// its own default back at once (tried on build 26300: .jpg went to
+// Photos). The settings' page is the way.

@@ -110,6 +110,8 @@ Windows 不允许程序自己把自己设成默认（每个扩展名的选择带
 1. 设置（Ctrl+,）里点「默认应用…」。程序先向系统登记自己能打开哪些类型（`shell.RegisterDefaults`：`HKCU\Software\MyImages\Capabilities` 和 `RegisteredApplications`，只写当前用户，每次写的内容一样），然后打开系统设置里 MyImages 的那一页（`ms-settings:defaultapps?registeredAppUser=MyImages`）。
 2. 在那一页里点要交给 MyImages 的类型（.jpg、.png……），选 MyImages。
 
+也试过让程序自己设（2026-11-12，Windows 11 26300）：把扩展名在 `HKCU\Software\Classes` 里指向自己，再删掉系统记的用户选择（`UserChoice`、`UserChoiceLatest`），这是老办法。结果系统立刻把选择重建成它自己的默认（.jpg 变成了「照片」），所以这段代码没有留下。伪造那个校验值等于绕过系统的保护，不做。
+
 2026-11-12 在这台机器上试过：登记了 114 个扩展名，设置直接开在「应用 › 默认应用 › MyImages」，每个扩展名一行。也可以在任何图片上右键「打开方式 › 选择其他应用 › 始终」。
 
 ## 自动更新
