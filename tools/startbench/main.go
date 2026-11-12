@@ -190,6 +190,15 @@ func main() {
 	var firsts []time.Duration
 	var steps []time.Duration
 	for run := 0; run < *runs; run++ {
+		// A window of an earlier run that has not gone yet would be taken
+		// for this run's, and its times would be nonsense.
+		for i := 0; i < 200 && findWindow(want) != 0; i++ {
+			time.Sleep(50 * time.Millisecond)
+		}
+		if findWindow(want) != 0 {
+			fmt.Println("a window showing this picture is open already: close it first")
+			os.Exit(1)
+		}
 		cmd := exec.Command(viewer, append(flag.Args()[2:], picture)...)
 		start := time.Now()
 		if err := cmd.Start(); err != nil {

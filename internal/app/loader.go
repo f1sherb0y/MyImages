@@ -53,6 +53,8 @@ type photo struct {
 	// loading and loadingFull tell that a decode is under way; gen
 	// tells the decodes of a picture since turned from those that count.
 	loading, loadingFull bool
+	// larger asks for the preview again, of the size the area has now.
+	larger bool
 	gen                  int
 	// results holds what decodes finished, until the main thread takes
 	// them.
@@ -111,10 +113,10 @@ func (w *Window) load(p *photo, full bool) {
 		}
 		p.loadingFull = true
 	} else {
-		if p.preview != nil || p.full != nil || p.loading {
+		if (p.preview != nil && !p.larger) || p.full != nil || p.loading {
 			return
 		}
-		p.loading = true
+		p.loading, p.larger = true, false
 	}
 	var b box
 	if !full {
@@ -146,6 +148,15 @@ func (w *Window) load(p *photo, full bool) {
 		w.update(func() { w.take(p) })
 		w.app.tidySoon()
 	})
+}
+
+// loadLarger decodes a photo's preview again, for the area as it is now.
+func (w *Window) loadLarger(p *photo) {
+	if p.loading || p.full != nil {
+		return
+	}
+	p.larger = true
+	w.load(p, false)
 }
 
 // newShot makes of a decoded picture what the window draws.
@@ -189,10 +200,28 @@ func (w *Window) take(p *photo) bool {
 			}
 			pic := d.pic
 			p.orient, p.format, p.via, p.frames, p.opaque = pic.Orient, pic.Format, pic.Via, pic.Frames, pic.Opaque
-			p.vector, p.partial = pic.Vector, pic.Preview
-			p.w, p.h = pic.FullW, pic.FullH
+			p.vector = pic.Vector
+			if d.full || p.full == nil {
+				p.partial = pic.Preview
+			}
+			pw, ph := pic.FullW, pic.FullH
 			if sideways(turned(pic.Orient, p.turns, p.flip)) {
-				p.w, p.h = p.h, p.w
+				pw, ph = ph, pw
+			}
+			if d.full || p.full == nil {
+				if d.full && p.w > 0 && pw != p.w && p == w.current() && !w.view.fitted {
+					// The file's own pixels are of another size than the
+					// preview that showed, as a raw file's: the view
+					// stays on the same part of the picture.
+					k := float64(pw) / float64(p.w)
+					v := &w.view
+					v.cx, v.cy, v.ax, v.ay = v.cx*k, v.cy*k, v.ax*k, v.ay*k
+					v.zoom /= k
+					if v.target > 0 {
+						v.target /= k
+					}
+				}
+				p.w, p.h = pw, ph
 			}
 			if d.shot.complete {
 				p.full = d.shot

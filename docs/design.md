@@ -51,24 +51,40 @@ tools/               startbench（秒表）、decbench（解码器计时）
 
 - 空闲时不画帧（MyGo 只在有变化时画），CPU 为零。
 - 解码告一段落 2 秒后把用过的内存还给系统。
-- 一个 21 MB 的 exe，没有运行时、没有附带的 DLL。
+- 一个 22.6 MB 的 exe，没有运行时、没有附带的 DLL。
 
 ## 格式
 
-`codec.Decode` 按下面的顺序试，前一个不认识就交给下一个：
+规则：只用 Windows 自带的解码器、编进 exe 的 Go 库，没有库的才自己写；不调用任何别的程序，也不假设用户装了什么。系统里装了更快的解码器（HEIF、AVIF、WebP、JPEG XL、RAW 的扩展）就用，没装时每一种都有进程内的替补。
 
-| 谁解码 | 格式 |
-|---|---|
-| **系统的解码器（WIC）** | JPEG、PNG、BMP、TIFF、ICO/CUR、DDS、JPEG XR（jxr、hdp、wdp）；WebP、HEIC/HEIF、AVIF、JPEG XL 和相机 RAW（装了系统对应的扩展时；Windows 11 自带其中大部分） |
-| **Go 的解码库** | GIF（标准库）、AVIF（gen2brain/avif）、JPEG XL（gen2brain/jpegxl）、JPEG 2000（ajroetker/go-jpeg2000）、PSD/PSB（oov/psd）、TGA（ftrvxmtrx/tga）、QOI（xfmoulet/qoi）、PCX（samuel/go-pcx）、PBM/PGM/PPM/PNM/PAM（spakin/netpbm）、Radiance HDR 和 PFM（mdouchement/hdr，带色调映射）、OpenEXR（mokiat/goexr）、SVG/SVGZ（MyGo 自己的 SVG 渲染）；以及系统没有解码器时的 PNG、JPEG、BMP、TIFF（标准库和 golang.org/x/image）和 WebP（gen2brain/webp） |
-| **系统的绘图接口** | EMF、WMF（GDI 回放） |
-| **RAW 的内嵌预览** | 系统的 RAW 解码器不认识的相机文件：找出文件里最大的那张内嵌 JPEG 来显示，状态栏注明「内嵌预览」 |
-| **ImageMagick**（如果装了） | 上面都不认识的：XBM、XPM、FITS、VIFF、WPG、PIZ 压缩的 EXR、部分 PSD 等。`magick` 在 PATH 里才有这一档 |
-| **系统的缩略图处理程序** | 最后的办法：别的程序给自己的文件类型装了缩略图处理程序的，显示它给的图 |
+| 格式 | 扩展名 | 谁解码 |
+|---|---|---|
+| JPEG、PNG、BMP、TIFF、ICO | jpg jpeg jpe jfif jif exif · png apng · bmp dib rle · tif tiff · ico cur | Windows 自带的 WIC；没有时是 Go 标准库和 golang.org/x/image |
+| GIF | gif gifv | Go 标准库（动图由 MyGo 合成） |
+| WebP | webp | 系统的扩展，或 gen2brain/webp（动图总是它） |
+| HEIF | heic heif hif heics heifs avci avcs | 系统的扩展，或 gen2brain/heic |
+| AVIF | avif avifs | 系统的扩展，或 gen2brain/avif |
+| JPEG XL | jxl | 系统的扩展，或 gen2brain/jpegxl |
+| JPEG 2000 | jp2 j2k j2c jpc jpf jpx jpm | ajroetker/go-jpeg2000 |
+| JPEG XR | jxr hdp wdp | WIC 自带 |
+| DDS | dds | 压缩的：WIC 自带；未压缩的：自己写的 |
+| Photoshop | psd psb | oov/psd（8 位彩色，带透明）；16/32 位、索引色：自己写的合成图读取 |
+| SVG | svg svgz | MyGo 的 SVG 渲染器 |
+| 图元文件 | emf wmf | Windows 的 GDI 回放 |
+| OpenEXR | exr | mrjoshuak/go-openexr（ZIP、PIZ、RLE 等） |
+| Radiance HDR、PFM | hdr rgbe · pfm | mdouchement/hdr |
+| TGA、QOI、PCX | tga icb vda vst · qoi · pcx | ftrvxmtrx/tga、xfmoulet/qoi、samuel/go-pcx |
+| Netpbm | pbm pgm ppm pnm pam | spakin/netpbm |
+| FITS | fits fit fts | astrogo/fitsio 读文件头，像素自己读（彩色、16 位、浮点） |
+| 传真 | fax g3 | golang.org/x/image/ccitt |
+| XBM、XPM、VIFF、WPG、CUT | xbm · xpm · viff xv · wpg · cut | 自己写的（没有 Go 库，每个几十行） |
+| 相机 RAW | 3fr ari arw bay cap cr2 cr3 crw dcr dcs dng drf eip erf fff gpr iiq k25 kdc mdc mef mos mrw nef nrw orf ori pef ptx pxn r3d raf raw rw2 rwl rwz sr2 srf srw x3f | 浏览时：相机内嵌的 JPEG（够大时）；放大后：系统的 RAW 解码器；系统没有解码器的：只有内嵌的 JPEG，状态栏注明 |
 
-AVIF 和 JPEG XL 优先用系统的（更快），没装扩展时用 Go 的库（WebAssembly 编译的 libavif、libjxl，在进程内跑，不需要 cgo），所以这两种格式不依赖用户装没装扩展。文件扩展名不对也没关系：按内容再认一遍。
+HDR、EXR、PFM 里的光没有上限：不比白更亮的原样显示，有更亮部分的图整体压进屏幕的范围（Reinhard 曲线）。文件扩展名不对也没关系：按内容再认一遍。最后一档是系统的缩略图处理程序（别的程序给自己的文件类型装的），有就用，没有不影响上面任何一种。
 
-和 ImageGlass 10 的默认列表（81 个扩展名）比：它的列表这里都认，其中 `cut dcr-系 fax fits flif viff wpg xbm xpm xv` 等几种冷门格式要靠 ImageMagick 兜底（ImageGlass 自己带着 ImageMagick，这是它 107 MB 的原因）；多出来的有 `jxr hdp wdp jp2 j2k qoi tga pam pfm apng avifs` 等。
+**和 ImageGlass 10 的默认列表（81 个扩展名）比**：只有两个没有解码器。`flif`：没有 Go 库，格式已停止维护；ImageGlass 靠的 ImageMagick 在这台机器上的格式表里对它是既不能读也不能写。`obm`：查不到这是什么格式，ImageMagick 的格式表里也没有它。`mjpeg` 显示第一帧。多出来的有 jxr hdp wdp、jp2 j2k、tga 的别名、pam pfm、apng、avifs、fit fts、g3 等。
+
+**怎么验证的**：`internal/codec` 的测试用同一张 97×61 的参考图让 ImageMagick 写出 36 种文件（各种压缩、位深），逐个解码后和参考图逐像素比，再把每个文件截断、改字节后解码，确认不会崩溃。ImageMagick 只用来在测试时造文件，程序本身不调用它；CI 的机器上没有它，这组测试会跳过。XBM、CUT 用手写的字节测。真实文件：4 个 HEIC（系统解码器和 gen2brain/heic 两条路都试了，后者慢 4 倍）、8 种相机的 RAW（CR2、CR3、NEF、ARW、DNG、RAF、ORF、RW2，来自 raw.pixls.us）都能显示。已知的不足：那张诺基亚 Lumia 1020 的 DNG，系统解码器只给出 880×656 的预览。
 
 每种格式谁更快是量过的（[benchmark.md](benchmark.md#解码器)）：JPEG、PNG、WebP、LZW 的 TIFF 都是 WIC 更快，所以走 WIC。
 
@@ -135,5 +151,5 @@ AVIF 和 JPEG XL 优先用系统的（更快），没装扩展时用 Go 的库�
 ## 测试
 
 - `internal/app` 的测试用 MyGo 的 `ui.Tester` 在没有窗口的情况下跑整个界面：真的图片文件（临时目录里现画的 PNG、JPEG、GIF、SVG），真的解码，合成的按键、滚轮、拖动，然后读画出来的像素。覆盖：打开和翻页的顺序（自然排序、循环）、缩放（指针下的点不动）、拖动、只在放大后才解全尺寸、旋转、删除后到下一张、动图逐帧播放、矢量图铺满且边缘锐利、各面板和设置。
-- 格式：用 ImageMagick 生成了 40 多种格式的样本逐个解码（`tools/decbench`），都能解；样本没有入库，这一步不在自动测试里。HEIC、相机 RAW、WMF 之外的真实世界文件没有系统地试过。
-- 真实窗口里验证过的：启动和切换的计时（`tools/startbench`）、截图（`--screenshot`）、更新（见上）。CI 构建的 0.1.0 安装包在这台机器上静默安装过（`/S`）：装到了 `%LOCALAPPDATA%\Programs\MyImages`，「应用」列表里有它，`.jpg` 的「打开方式」里有它，装好的那份启动和切换的计时与本地构建一致。没有在真实窗口里试过的：打印、设为壁纸、「打开方式」对话框。
+- 格式：见[格式](#格式)一节的「怎么验证的」。
+- 真实窗口里验证过的：启动和切换的计时（`tools/startbench`）、截图（`--screenshot`）、更新（见上）。CI 构建的 0.1.0 安装包在这台机器上静默安装过（`/S`）：装到了 `%LOCALAPPDATA%\Programs\MyImages`，「应用」列表里有它，`.jpg` 的「打开方式」里有它，装好的那份启动和切换的计时与本地构建一致。`internal/shell` 的桌面测试（设 `MYIMAGES_DESKTOP_TESTS=1` 才跑，因为它们动真实的桌面）验证过：设为壁纸（设上、读回、再还原）、复制（剪贴板里有文件和位图两种格式）、删除到回收站、属性、「打开方式」、打印、在资源管理器中显示（各自弹出了系统的窗口：「属性」「选取应用」「打印图片」「文件资源管理器」，随后关掉）。

@@ -114,6 +114,8 @@ func decode(path string, opt Options) (*Picture, error) {
 		return decodeSystem(path, opt)
 	case "go":
 		return decodeSniffed(path, opt)
+	case "embedded":
+		return decodeEmbedded(path, opt)
 	}
 	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(path), "."))
 	var firstErr error
@@ -126,6 +128,16 @@ func decode(path string, opt Options) (*Picture, error) {
 			firstErr = err
 		}
 		return nil
+	}
+	if rawExts[ext] && opt.MaxW > 0 && opt.MaxH > 0 {
+		// To look at a camera's raw file, the JPEG the camera put in it
+		// is as good as the sensor's data developed, and ten times as
+		// quick to decode, where it is large enough for the window. All
+		// of the file's own pixels are asked for without a box.
+		if p, err := decodeEmbedded(path, opt); err == nil && (p.FullW >= 1400 || p.FullH >= 1400 || (p.FullW >= opt.MaxW && p.FullH >= opt.MaxH)) {
+			p.Partial = true
+			return p, nil
+		}
 	}
 	// Formats the system has no codec for, or decodes worse than we do,
 	// go to our decoders first, by their extension; then the system's;
@@ -147,12 +159,6 @@ func decode(path string, opt Options) (*Picture, error) {
 		if p := try(func() (*Picture, error) { return decodeEmbedded(path, opt) }); p != nil {
 			return p, nil
 		}
-	}
-	if p := try(func() (*Picture, error) { return decodeExternal(path, opt) }); p != nil {
-		if p.Format == "" {
-			p.Format = strings.ToUpper(ext)
-		}
-		return p, nil
 	}
 	if p := try(func() (*Picture, error) { return decodeShell(path, opt) }); p != nil {
 		return p, nil

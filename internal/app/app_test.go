@@ -308,3 +308,29 @@ func TestAnimatedWebPPlays(t *testing.T) {
 		t.Errorf("the animation showed %d of its 3 frames", len(seen))
 	}
 }
+
+// A window that grows gets a larger preview, not all of the file's
+// pixels.
+func TestLargerWindowLargerPreview(t *testing.T) {
+	h := newHarness(t)
+	path := filepath.Join(h.dir, "large.jpg")
+	picture(t, path, 6000, 4000, green)
+	h.w.openPath(path)
+	h.settle()
+	p := h.w.current()
+	small := p.preview.w
+	if p.full != nil || small >= 3000 {
+		t.Fatalf("in a window of 900×600 the preview is %d wide, full %v", small, p.full != nil)
+	}
+	h.tt.SetSize(2400, 1700)
+	h.settle()
+	h.tt.Frame()
+	h.settle()
+	p = h.w.current()
+	if p.full != nil {
+		t.Errorf("growing the window decoded all the pixels")
+	}
+	if p.preview.w <= small || p.preview.w >= 6000 {
+		t.Errorf("after growing the window the preview is %d wide, was %d", p.preview.w, small)
+	}
+}

@@ -30,12 +30,10 @@ var rawList = strings.Fields(`
 	rwl rwz sr2 srf srw x3f
 `)
 
-// rareList are the extensions of formats shown only where something
-// installed knows them: ImageMagick, or a handler of the system's.
-var rareList = strings.Fields(`
-	xbm xpm fits fit fts viff xv wpg cut fax g3 flif sgi ras sun pict pct
-	xcf dcm dpx cin miff mng jng pcd palm otb wbmp art mjpeg obm
-`)
+// rareList are extensions with no decoder of their own, which show
+// where what they hold is of another format (an MJPEG's first frame is a
+// JPEG) or the system has a handler for them.
+var rareList = strings.Fields(`mjpeg flif obm`)
 
 var rawExts = func() map[string]bool {
 	m := map[string]bool{}

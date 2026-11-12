@@ -234,11 +234,17 @@ func (w *Window) paint(p *ui.Painter, r ui.Rect) {
 	if lvl == nil {
 		return
 	}
-	if ph.full == nil && ph == w.current() && max(v.zoom, v.target)*per > 1.02 {
-		// Shown larger than the pixels decoded for the window: now all
-		// of the file's are worth decoding. Until then, most pictures
-		// are looked at and left, and cost a fraction of the memory.
-		w.load(ph, true)
+	if z := max(v.zoom, v.target); ph.full == nil && ph == w.current() && z*per > 1.02 {
+		if float64(ph.w)*z <= float64(vw)*1.02 && float64(ph.h)*z <= float64(vh)*1.02 && !ph.preview.complete {
+			// Whole in an area larger than the one its preview was
+			// decoded for, as after the window grew: a larger preview.
+			w.loadLarger(ph)
+		} else {
+			// Shown larger than the window: now all of the file's pixels
+			// are worth decoding. Until then, most pictures are looked
+			// at and left, and cost a fraction of the memory.
+			w.load(ph, true)
+		}
 	}
 	// The picture's corner in pixels of the area, on a whole pixel.
 	ox := math.Round(float64(vw)/2 - v.cx*v.zoom)

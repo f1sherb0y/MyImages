@@ -8,13 +8,13 @@
   <a href="https://github.com/f1sherb0y/MyImages/releases/latest">下载安装包</a>
 </p>
 
-一个快、紧凑的 Windows 看图软件。界面用 [MyGo](https://github.com/egoist/mygo) 的原生 UI 在 GPU 上画，纯 Go，没有 cgo，单个 21 MB 的 exe，安装包 8 MB。
+一个快、紧凑的 Windows 看图软件。界面用 [MyGo](https://github.com/egoist/mygo) 的原生 UI 在 GPU 上画，纯 Go，没有 cgo，单个 22.6 MB 的 exe，安装包 8.8 MB。
 
 ![窗口：工具栏、图片、信息面板、缩略图](docs/images/window.png)
 
 - **快**：双击一张 3200 万像素的照片，到它出现在屏幕上约 0.18 秒；切到下一张约 25 毫秒。同一台机器、同一张照片、同一把秒表，ImageGlass 10 是 0.74 秒和 0.55 秒。测法和完整数字见 [docs/benchmark.md](docs/benchmark.md)。
 - **省**：看这张照片时占 120 MB 内存（ImageGlass 10：1.3 GB），空闲时不用 CPU。
-- **格式多**：JPEG、PNG、GIF、WebP、BMP、TIFF、ICO、HEIC/HEIF、AVIF、JPEG XL、JPEG 2000、JPEG XR、DDS、SVG、PSD、TGA、QOI、PCX、PNM、HDR、EXR、EMF/WMF，四十多种相机 RAW……完整列表和各自由谁解码见 [docs/design.md](docs/design.md#格式)。
+- **格式多**：JPEG、PNG、GIF、WebP、BMP、TIFF、ICO、HEIC/HEIF、AVIF、JPEG XL、JPEG 2000、JPEG XR、DDS、SVG、PSD、EXR、HDR、TGA、QOI、PCX、PNM、FITS、EMF/WMF、XBM/XPM……和四十多种相机 RAW。全部在进程内解码（Windows 自带的解码器和编进 exe 的 Go 库），不依赖用户另外装任何东西。完整的表见 [docs/design.md](docs/design.md#格式)。
 - **动图**：GIF、APNG、动态 WebP 直接播放。
 - **缩放和拖动**：滚轮以指针为中心缩放，拖动平移，双击在「适应窗口」和 100% 之间切换；放大后像素保持锐利（可在设置里改成平滑）。
 - **缩略图条、信息面板**（拍摄时间、相机、镜头、曝光、位置）、状态栏里指针下的颜色。
