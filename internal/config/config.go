@@ -50,6 +50,9 @@ type Settings struct {
 	OneWindow bool `json:"oneWindow"`
 	// AutoUpdate looks for newer versions, and downloads them.
 	AutoUpdate bool `json:"autoUpdate"`
+	// Registered is the version that last told the system which files
+	// the program opens.
+	Registered string `json:"registered,omitempty"`
 	// ViewW and ViewH are the size the picture area last had, in pixels:
 	// what the first picture is decoded for before the window exists.
 	ViewW int `json:"viewW,omitempty"`

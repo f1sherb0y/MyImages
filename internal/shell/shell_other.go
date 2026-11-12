@@ -26,7 +26,7 @@ func DefaultApps() error { return ErrUnsupported }
 
 // RegisterDefaults tells the system which kinds of files the program
 // opens.
-func RegisterDefaults(exe string, exts []string) error { return ErrUnsupported }
+func RegisterDefaults(exe string, exts []string) ([]string, error) { return nil, ErrUnsupported }
 
 // IsDefaultFor reports whether the program is the default for an
 // extension.

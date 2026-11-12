@@ -13,10 +13,13 @@ func progID(ext string) string { return "dev.myimages.viewer." + ext }
 
 // RegisterDefaults tells the system which kinds of files the program at
 // exe opens, for the current user, so that the system's settings list it
-// among the programs that can be the default for them. It changes no
-// default: only the user does, in those settings. Every write is the
-// same each time, so it is safe to run again.
-func RegisterDefaults(exe string, exts []string) error {
+// among the programs that can be the default for them. An extension that
+// nothing opens yet becomes the program's, as an installer makes a
+// format its own; where the user chose a program, or another claimed the
+// extension, nothing changes: only the user changes that, in the
+// settings. It returns the extensions it made the program's. Every write
+// is the same each time, so it is safe to run again.
+func RegisterDefaults(exe string, exts []string) (claimed []string, err error) {
 	const capabilities = `Software\MyImages\Capabilities`
 	set := func(path, name, value string) error {
 		k, _, err := registry.CreateKey(registry.CURRENT_USER, path, registry.SET_VALUE)
@@ -31,23 +34,47 @@ func RegisterDefaults(exe string, exts []string) error {
 		id := progID(ext)
 		// The kind of file: what opens it, its icon, its name.
 		if err := set(`Software\Classes\`+id+`\shell\open\command`, "", command); err != nil {
-			return err
+			return claimed, err
 		}
 		_ = set(`Software\Classes\`+id, "", strings.ToUpper(ext)+" Image")
 		_ = set(`Software\Classes\`+id+`\DefaultIcon`, "", exe+",0")
 		_ = set(`Software\Classes\`+id+`\shell\open`, "FriendlyAppName", "MyImages")
+		if unclaimed(ext) && set(`Software\Classes\.`+ext, "", id) == nil {
+			claimed = append(claimed, ext)
+		}
 		// Offered for the extension, and claimed as one the program
 		// opens.
 		_ = set(`Software\Classes\.`+ext+`\OpenWithProgids`, id, "")
 		if err := set(capabilities+`\FileAssociations`, "."+ext, id); err != nil {
-			return err
+			return claimed, err
 		}
 	}
 	_ = set(capabilities, "ApplicationName", "MyImages")
 	_ = set(capabilities, "ApplicationDescription", "A fast, compact picture viewer")
 	_ = set(`Software\Classes\Applications\`+exeName(exe)+`\shell\open\command`, "", command)
 	_ = set(`Software\Classes\Applications\`+exeName(exe), "FriendlyAppName", "MyImages")
-	return set(`Software\RegisteredApplications`, "MyImages", capabilities)
+	return claimed, set(`Software\RegisteredApplications`, "MyImages", capabilities)
+}
+
+// unclaimed reports whether nothing opens an extension yet: the user
+// chose no program for it, and no other program named its kind of file
+// as the extension's, for the user or for the machine.
+func unclaimed(ext string) bool {
+	if DefaultFor(ext) != "" {
+		return false
+	}
+	for _, root := range []registry.Key{registry.CURRENT_USER, registry.LOCAL_MACHINE} {
+		k, err := registry.OpenKey(root, `Software\Classes\.`+ext, registry.QUERY_VALUE)
+		if err != nil {
+			continue
+		}
+		kind, _, _ := k.GetStringValue("")
+		k.Close()
+		if kind != "" && !strings.EqualFold(kind, progID(ext)) {
+			return false
+		}
+	}
+	return true
 }
 
 func exeName(exe string) string {

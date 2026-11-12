@@ -145,7 +145,7 @@ func (w *Window) settingsPage(c *ui.Context) {
 					// The system lists the program among those that can
 					// be the default only once it knows what it opens.
 					if exe, err := os.Executable(); err == nil {
-						if err := shell.RegisterDefaults(exe, codec.Extensions()); err != nil {
+						if _, err := shell.RegisterDefaults(exe, codec.Extensions()); err != nil {
 							w.report(err)
 							return
 						}

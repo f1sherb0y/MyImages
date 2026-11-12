@@ -15,6 +15,7 @@ import (
 
 	"myimages/internal/codec"
 	"myimages/internal/config"
+	"myimages/internal/shell"
 )
 
 // Version is the program's version, as mygo.json has it when the
@@ -108,6 +109,18 @@ func Run(paths []string, opt Options, started time.Time) error {
 			// Also when trying an update before it is published, beside
 			// the copy installed.
 			a.watchUpdates()
+		}
+		if !solo && mygo.Updater.Enabled() && a.set.Registered != Version() {
+			// An installed copy tells the system, once a version, which
+			// files it opens: the settings' page of default programs
+			// lists it, and formats nothing opens yet become its own.
+			a.set.Registered = Version()
+			a.saveSoon()
+			go func() {
+				if exe, err := os.Executable(); err == nil {
+					_, _ = shell.RegisterDefaults(exe, codec.Extensions())
+				}
+			}()
 		}
 	})
 	return mygo.App.Run()
