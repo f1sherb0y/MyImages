@@ -26,7 +26,7 @@
 
 到 [Releases](https://github.com/f1sherb0y/MyImages/releases/latest) 下载 `myimages-setup-<版本>-amd64.exe` 运行即可，只装给当前用户，不需要管理员权限；同一页的 `MyImages-<版本>-portable-amd64.exe` 是免安装的单个文件（不会自动更新）。安装包没有代码签名，Windows 可能会提示「未知发布者」。
 
-安装后图片的「打开方式」里会有 MyImages；要设成默认，在设置（Ctrl+,）里点「默认应用…」。
+安装后图片的「打开方式」里会有 MyImages。要设成默认：设置（Ctrl+,）里点「默认应用…」，系统设置会直接开在 MyImages 那一页，在里面点要交给它的类型（Windows 不允许程序替你做这一步）。
 
 ## 快捷键
 

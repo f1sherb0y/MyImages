@@ -217,9 +217,3 @@ func setClipboard(format uintptr, data []byte) error {
 	// The clipboard owns the memory now.
 	return nil
 }
-
-// DefaultApps opens the system's settings where the user chooses which
-// program opens which files.
-func DefaultApps() error {
-	return exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", "ms-settings:defaultapps").Start()
-}

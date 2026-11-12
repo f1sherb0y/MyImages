@@ -2,11 +2,13 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"slices"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 
+	"myimages/internal/codec"
 	"myimages/internal/shell"
 	"myimages/locales"
 )
@@ -139,7 +141,17 @@ func (w *Window) settingsPage(c *ui.Context) {
 		ui.Box(c).Height(6)
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 			if ui.Button(c.Key("defaults"), locales.SetDefaultApp()).Clicked() {
-				go func() { w.report(shell.DefaultApps()) }()
+				go func() {
+					// The system lists the program among those that can
+					// be the default only once it knows what it opens.
+					if exe, err := os.Executable(); err == nil {
+						if err := shell.RegisterDefaults(exe, codec.Extensions()); err != nil {
+							w.report(err)
+							return
+						}
+					}
+					w.report(shell.DefaultApps())
+				}()
 			}
 			ui.Spacer(c)
 			switch {

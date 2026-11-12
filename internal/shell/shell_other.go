@@ -23,3 +23,11 @@ func CopyImage(path string, pix []byte, w, h int) error { return ErrUnsupported 
 
 // DefaultApps opens the system's settings of default programs.
 func DefaultApps() error { return ErrUnsupported }
+
+// RegisterDefaults tells the system which kinds of files the program
+// opens.
+func RegisterDefaults(exe string, exts []string) error { return ErrUnsupported }
+
+// IsDefaultFor reports whether the program is the default for an
+// extension.
+func IsDefaultFor(ext string) bool { return false }
