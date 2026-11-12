@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -16,8 +15,8 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// These tests do things to the real desktop: they change the wallpaper
-// (and put it back), replace what the clipboard holds, and open the
+// These tests do things to the real desktop: they replace what the
+// clipboard holds, and open the
 // system's dialogs (and close them). They run only when
 // MYIMAGES_DESKTOP_TESTS is set, on a desktop someone is logged in to.
 func desktop(t *testing.T) string {
@@ -42,31 +41,13 @@ func desktop(t *testing.T) string {
 	return path
 }
 
-func wallpaper() string {
-	var buf [1024]uint16
-	const getDeskWallpaper = 0x73
-	procSystemParametersInfo.Call(getDeskWallpaper, uintptr(len(buf)), uintptr(unsafe.Pointer(&buf[0])), 0)
-	return windows.UTF16ToString(buf[:])
-}
-
-func TestSetWallpaper(t *testing.T) {
-	path := desktop(t)
-	before := wallpaper()
-	defer func() {
-		if err := SetWallpaper(0, before); err != nil {
-			t.Errorf("the wallpaper was not put back: %v", err)
-		}
-		if got := wallpaper(); got != before {
-			t.Errorf("the wallpaper is %q, was %q", got, before)
-		}
-	}()
-	if err := SetWallpaper(0, path); err != nil {
-		t.Fatal(err)
-	}
-	if got := wallpaper(); !strings.EqualFold(got, path) {
-		t.Errorf("the wallpaper is %q, want %q", got, path)
-	}
-}
+// Setting the wallpaper is not tried here. A test did once, and put
+// back the path the system reported before; but that path was the
+// system's own cached copy, which setting the test's picture had
+// overwritten, and the user's wallpaper was lost (2026-11-12). There is
+// no way to put a wallpaper back that is sure for every way one can be
+// set (a slideshow, Spotlight, a theme), so the real desktop's is left
+// alone.
 
 func TestCopyImage(t *testing.T) {
 	path := desktop(t)
