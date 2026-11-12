@@ -58,6 +58,14 @@ var (
 	})
 )
 
+var (
+	children []uintptr
+	childCB  = syscall.NewCallback(func(child, _ uintptr) uintptr {
+		children = append(children, child)
+		return 1
+	})
+)
+
 func findWindow(title string) uintptr {
 	wantTitle, found = title, 0
 	procEnumWindows.Call(findCB, 0)
@@ -165,17 +173,20 @@ func main() {
 	var rect [4]int32
 	procGetWindowRect.Call(hwnd, uintptr(unsafe.Pointer(&rect)))
 	pt := [2]int32{rect[0] + int32(x), rect[1] + int32(y)}
-	// The window that draws may be one inside it: the one at the point.
+	// The window that draws may be one inside it: the child that holds
+	// the point, found among the window's own children, so that another
+	// program's window over the button makes no difference.
 	target := hwnd
-	screen := uintptr(uint32(pt[0])) | uintptr(uint32(pt[1]))<<32
-	if inner, _, _ := user32.NewProc("WindowFromPoint").Call(screen); inner != 0 {
-		if root, _, _ := user32.NewProc("GetAncestor").Call(inner, 2); root == hwnd {
-			target = inner
-		} else {
-			fmt.Println("another window covers the button: the click goes to the window itself")
+	children = children[:0]
+	user32.NewProc("EnumChildWindows").Call(hwnd, childCB, 0)
+	for _, child := range children {
+		var r [4]int32
+		procGetWindowRect.Call(child, uintptr(unsafe.Pointer(&r)))
+		if pt[0] >= r[0] && pt[0] < r[2] && pt[1] >= r[1] && pt[1] < r[3] {
+			target = child
 		}
 	}
-	fmt.Printf("clicking window %#x\n", target)
+	fmt.Printf("clicking window %#x of %d inside\n", target, len(children))
 	hwnd = target
 	procScreenToClient.Call(hwnd, uintptr(unsafe.Pointer(&pt)))
 	at := uintptr(uint32(uint16(pt[0])) | uint32(uint16(pt[1]))<<16)
