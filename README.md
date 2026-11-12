@@ -26,7 +26,9 @@
 
 到 [Releases](https://github.com/f1sherb0y/MyImages/releases/latest) 下载 `myimages-setup-<版本>-amd64.exe` 运行即可，只装给当前用户，不需要管理员权限；同一页的 `MyImages-<版本>-portable-amd64.exe` 是免安装的单个文件（不会自动更新）。安装包没有代码签名，Windows 可能会提示「未知发布者」。
 
-安装后图片的「打开方式」里会有 MyImages。要设成默认：设置（Ctrl+,）里点「默认应用…」，系统设置会直接开在 MyImages 那一页，在里面点要交给它的类型（Windows 不允许程序替你做这一步）。
+安装后图片的「打开方式」里会有 MyImages。设置（Ctrl+,）里点 **「设置常见格式」**，即可自动设置 `.jpg`、`.jpeg`、`.png`、`.gif`、`.webp`、`.bmp`、`.tif`、`.tiff`、`.heic`、`.heif`、`.avif`；点 **「设置全部格式」** 则设置软件支持的全部图片格式，包括 SVG、PSD、相机 RAW 等，不用逐个去系统设置里点。
+
+这两个操作也可以通过 `MyImages.exe --set-default` 和 `MyImages.exe --set-default-all` 执行；普通启动和更新不会抢默认。支持 Windows 10 的传统关联机制和新版 Windows 11 的关联机制。设置后向 Windows 查询实际生效的程序，失败则尝试恢复该格式原来的选择，并显示错误详情。`MyImages.exe --default-status` 可查看常见格式的当前实际关联。便携版设置后请不要移动或删除它的 exe。
 
 ## 快捷键
 

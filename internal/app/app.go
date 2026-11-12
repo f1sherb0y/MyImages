@@ -61,6 +61,11 @@ type App struct {
 	updateReady string
 	updating    bool
 
+	// Default association work runs off the UI thread, once per application.
+	defaultsBusy    bool
+	defaultsMessage string
+	defaultsDetail  string
+
 	// langs are the languages the program is written in, and lang the
 	// one chosen for it, "" while it follows the system's.
 	langs []string
@@ -112,8 +117,8 @@ func Run(paths []string, opt Options, started time.Time) error {
 		}
 		if !solo && mygo.Updater.Enabled() && a.set.Registered != Version() {
 			// An installed copy tells the system, once a version, which
-			// files it opens: the settings' page of default programs
-			// lists it, and formats nothing opens yet become its own.
+			// files it opens. Default choices change only through the
+			// explicit settings button or --set-default command.
 			a.set.Registered = Version()
 			a.saveSoon()
 			go func() {

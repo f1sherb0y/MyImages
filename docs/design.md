@@ -105,14 +105,16 @@ HDR、EXR、PFM 里的光没有上限：不比白更亮的原样显示，有更�
 
 ## 设为默认看图程序
 
-Windows 不允许程序自己把自己设成默认（每个扩展名的选择带着系统算的校验值，只有「设置」能写），所以分两步：
+设置中的「设置常见格式」和「设置全部格式」都调用 `shell.SetDefaults`，前者传入 11 个常见图片扩展名（jpg/jpeg/png/gif/webp/bmp/tif/tiff/heic/heif/avif），后者传入解码器支持的完整扩展名列表。命令行分别是 `--set-default`、`--set-default-all`。只在用户执行这些操作时设置关联。
 
-1. 设置（Ctrl+,）里点「默认应用…」。程序先向系统登记自己能打开哪些类型（`shell.RegisterDefaults`：`HKCU\Software\MyImages\Capabilities` 和 `RegisteredApplications`，只写当前用户，每次写的内容一样），然后打开系统设置里 MyImages 的那一页（`ms-settings:defaultapps?registeredAppUser=MyImages`）。
-2. 在那一页里点要交给 MyImages 的类型（.jpg、.png……），选 MyImages。
+- `RegisterDefaults` 仅登记 ProgID、打开命令、Capabilities 和 RegisteredApplications，不再把“注册了候选”当成“设置了默认”。所有写入限于当前用户。
+- `internal/assochash` 是纯 Go 校验算法，支持传统 `UserChoice` 和新式 `UserChoiceLatest`。新式算法移植自 [cssxn/UserChoiceLatestHash](https://github.com/cssxn/UserChoiceLatestHash)，固定参考提交 `662070e5cdea4496bc474f4bdfd81f77d4cabab3`，MIT 许可保留在 `internal/assochash/LICENSE` 并嵌入 exe，可通过 `--licenses` 查看。查表数据来自同一提交；不用外部 exe、PowerShell、cgo 或管理员权限。
+- Windows 10 使用传统算法，包括尚无用户选择记录的新建账户；Windows 11 先用机器现有记录验证算法兼容性。新式 Hash 使用 MachineID、SID 和 ProgId 子键的毫秒级 FILETIME；传统 Hash 的时间取整到分钟，处理跨分钟写入。
+- 写入前在内存中保存原来的选择，用于本次操作失败时回退。Hash 与键时间绑定，恢复时重新计算。
+- 每种格式写入后调用 `SHChangeNotify`，再通过 `AssocQueryStringW(ASSOCSTR_PROGID)` 查询实际默认程序。写入失败或系统未接受时尝试恢复该格式的原选择，并核对恢复后的实际关联；原记录未变则不重复写入。回退失败也会报告。部分成功会显示数量和错误详情，不会显示全成功。
+- Windows 10 及旧版 Windows 11 使用传统 `UserChoice`，新版 Windows 11 使用 `UserChoiceLatest`，根据实际记录识别。不改 ACL，不关闭 UCPD、系统服务或 Windows 功能。企业策略或未来 Windows 算法变更可能使自动设置失败，错误会显示在设置中。
 
-也试过让程序自己设（2026-11-12，Windows 11 26300）：把扩展名在 `HKCU\Software\Classes` 里指向自己，再删掉系统记的用户选择（`UserChoice`、`UserChoiceLatest`），这是老办法。结果系统立刻把选择重建成它自己的默认（.jpg 变成了「照片」），所以这段代码没有留下。伪造那个校验值等于绕过系统的保护，不做。
-
-2026-11-12 在这台机器上试过：登记了 114 个扩展名，设置直接开在「应用 › 默认应用 › MyImages」，每个扩展名一行。也可以在任何图片上右键「打开方式 › 选择其他应用 › 始终」。
+2026-11-12 在 Windows 11 **26300.9711** 上验证了常见格式现有 `UserChoiceLatest` 的校验值，并用唯一临时扩展名完成真实注册表写入、Shell 生效查询和恢复测试；不把普通单元测试变成修改用户图片关联的操作。真实桌面测试分别由 `MYIMAGES_ASSOC_READ_TEST=1`（只读校验）和 `MYIMAGES_ASSOC_WRITE_TEST=1`（临时扩展名）启用。旧式算法的端到端生效仍需在使用旧式 UserChoice 的系统上验证。
 
 ## 自动更新
 

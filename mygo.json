@@ -1,7 +1,7 @@
 {
   "name": "MyImages",
   "identifier": "dev.myimages.viewer",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "copyright": "© 2026 f1sherb0y",
   "license": "MIT",
   "out": "build",

@@ -31,3 +31,8 @@ func RegisterDefaults(exe string, exts []string) ([]string, error) { return nil,
 // IsDefaultFor reports whether the program is the default for an
 // extension.
 func IsDefaultFor(ext string) bool { return false }
+
+func SetDefaults(exe string, exts []string) (DefaultResult, error) {
+	return DefaultResult{}, ErrUnsupported
+}
+func EffectiveDefaultFor(ext string) (string, error) { return "", ErrUnsupported }

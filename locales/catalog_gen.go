@@ -874,14 +874,66 @@ func (msgs Messages) SetAutoUpdate() string {
 	return Catalog.Format(msgs.locale, "setAutoUpdate", nil)
 }
 
-// SetDefaultApp says "Default Apps…"
+// MakeDefault says "Set Common Formats"
 // in the language the app shows.
-func SetDefaultApp() string { return In(i18n.Locale()).SetDefaultApp() }
+func MakeDefault() string { return In(i18n.Locale()).MakeDefault() }
 
-// SetDefaultApp says "Default Apps…"
+// MakeDefault says "Set Common Formats"
 // in the language of msgs.
-func (msgs Messages) SetDefaultApp() string {
-	return Catalog.Format(msgs.locale, "setDefaultApp", nil)
+func (msgs Messages) MakeDefault() string {
+	return Catalog.Format(msgs.locale, "makeDefault", nil)
+}
+
+// MakeDefaultAll says "Set All Formats"
+// in the language the app shows.
+func MakeDefaultAll() string { return In(i18n.Locale()).MakeDefaultAll() }
+
+// MakeDefaultAll says "Set All Formats"
+// in the language of msgs.
+func (msgs Messages) MakeDefaultAll() string {
+	return Catalog.Format(msgs.locale, "makeDefaultAll", nil)
+}
+
+// MakingDefault says "Setting defaults…"
+// in the language the app shows.
+func MakingDefault() string { return In(i18n.Locale()).MakingDefault() }
+
+// MakingDefault says "Setting defaults…"
+// in the language of msgs.
+func (msgs Messages) MakingDefault() string {
+	return Catalog.Format(msgs.locale, "makingDefault", nil)
+}
+
+// DefaultFormats says "JPEG, PNG, GIF, WebP, BMP, TIFF, HEIC/HEIF, AVIF"
+// in the language the app shows.
+func DefaultFormats() string { return In(i18n.Locale()).DefaultFormats() }
+
+// DefaultFormats says "JPEG, PNG, GIF, WebP, BMP, TIFF, HEIC/HEIF, AVIF"
+// in the language of msgs.
+func (msgs Messages) DefaultFormats() string {
+	return Catalog.Format(msgs.locale, "defaultFormats", nil)
+}
+
+// DefaultsDone says "Default for all selected image formats."
+// in the language the app shows.
+func DefaultsDone() string { return In(i18n.Locale()).DefaultsDone() }
+
+// DefaultsDone says "Default for all selected image formats."
+// in the language of msgs.
+func (msgs Messages) DefaultsDone() string {
+	return Catalog.Format(msgs.locale, "defaultsDone", nil)
+}
+
+// DefaultsPartial says "Set {count} of {total} formats. Hover for error details."
+// in the language the app shows.
+func DefaultsPartial(count string, total string) string {
+	return In(i18n.Locale()).DefaultsPartial(count, total)
+}
+
+// DefaultsPartial says "Set {count} of {total} formats. Hover for error details."
+// in the language of msgs.
+func (msgs Messages) DefaultsPartial(count string, total string) string {
+	return Catalog.Format(msgs.locale, "defaultsPartial", map[string]any{"count": count, "total": total})
 }
 
 // InfoName says "Name"

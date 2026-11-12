@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"os"
 	"slices"
 
 	"github.com/egoist/mygo"
@@ -139,20 +138,23 @@ func (w *Window) settingsPage(c *ui.Context) {
 		})
 		changed = w.flag(c, locales.SetAutoUpdate(), &set.AutoUpdate) || changed
 		ui.Box(c).Height(6)
+		ui.Text(c, locales.DefaultFormats()).FontSize(11).TextColor(th.TextMuted)
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-			if ui.Button(c.Key("defaults"), locales.SetDefaultApp()).Clicked() {
-				go func() {
-					// The system lists the program among those that can
-					// be the default only once it knows what it opens.
-					if exe, err := os.Executable(); err == nil {
-						if _, err := shell.RegisterDefaults(exe, codec.Extensions()); err != nil {
-							w.report(err)
-							return
-						}
-					}
-					w.report(shell.DefaultApps())
-				}()
+			label := locales.MakeDefault()
+			if a.defaultsBusy {
+				label = locales.MakingDefault()
 			}
+			if ui.PrimaryButton(c.Key("make-default"), label).Disabled(a.defaultsBusy).Clicked() {
+				a.makeDefault(shell.CommonImageExtensions())
+			}
+			if ui.Button(c.Key("defaults-all"), locales.MakeDefaultAll()).Disabled(a.defaultsBusy).Clicked() {
+				a.makeDefault(codec.Extensions())
+			}
+		})
+		if a.defaultsMessage != "" {
+			ui.Text(c, a.defaultsMessage).FontSize(11).Tooltip(a.defaultsDetail)
+		}
+		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 			ui.Spacer(c)
 			switch {
 			case a.updateReady != "":
